@@ -41,6 +41,16 @@ try {
 
 const APP_ID = process.env.FEISHU_APP_ID
 const APP_SECRET = process.env.FEISHU_APP_SECRET
+
+// Lark SDK's default logger writes to stdout via console.log/console.info,
+// which corrupts MCP's JSON-RPC stdio transport. Redirect all levels to stderr.
+const stderrLogger = {
+  error: (...msg: any[]) => process.stderr.write(`[error]: ${JSON.stringify(msg)}\n`),
+  warn:  (...msg: any[]) => process.stderr.write(`[warn]: ${JSON.stringify(msg)}\n`),
+  info:  (...msg: any[]) => process.stderr.write(`[info]: ${JSON.stringify(msg)}\n`),
+  debug: (...msg: any[]) => process.stderr.write(`[debug]: ${JSON.stringify(msg)}\n`),
+  trace: (...msg: any[]) => process.stderr.write(`[trace]: ${JSON.stringify(msg)}\n`),
+}
 const STATIC = process.env.FEISHU_ACCESS_MODE === 'static'
 
 if (!APP_ID || !APP_SECRET) {
@@ -60,6 +70,7 @@ const client = new lark.Client({
   appSecret: APP_SECRET,
   appType: lark.AppType.SelfBuild,
   domain: lark.Domain.Feishu,
+  logger: stderrLogger,
 })
 
 let botOpenId = ''
@@ -769,7 +780,7 @@ async function handleInbound(data: any): Promise<void> {
 
 // --- WebSocket event listener ---
 
-const eventDispatcher = new lark.EventDispatcher({}).register({
+const eventDispatcher = new lark.EventDispatcher({ logger: stderrLogger }).register({
   'im.message.receive_v1': async (data: any) => {
     await handleInbound(data)
   },
@@ -779,6 +790,7 @@ const wsClient = new lark.WSClient({
   appId: APP_ID,
   appSecret: APP_SECRET,
   loggerLevel: lark.LoggerLevel.info,
+  logger: stderrLogger,
 })
 
 // Get bot info for mention detection via raw API (SDK doesn't expose bot info methods)
