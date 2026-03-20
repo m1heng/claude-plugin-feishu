@@ -124,6 +124,26 @@ const knownChats = new Set<string>()
 // routes by message_id, ignoring any chat_id we checked).
 const messageChatMap = new Map<string, string>()
 
+// Cache open_id → display name so we only call the contact API once per user.
+const userNameCache = new Map<string, string>()
+
+async function resolveUserName(openId: string): Promise<string> {
+  const cached = userNameCache.get(openId)
+  if (cached !== undefined) return cached
+  try {
+    const res = await client.contact.v3.user.get({
+      path: { user_id: openId },
+      params: { user_id_type: 'open_id' },
+    })
+    const name = (res as any)?.data?.user?.name ?? openId
+    userNameCache.set(openId, name)
+    return name
+  } catch {
+    userNameCache.set(openId, openId)
+    return openId
+  }
+}
+
 // --- Security ---
 
 // reply's files param takes any path. Prevent sending channel state files.
@@ -760,7 +780,7 @@ async function handleInbound(data: any): Promise<void> {
     text = message.content ?? '(unable to parse message)'
   }
 
-  const userName = sender.sender_id?.user_id ?? senderId
+  const userName = await resolveUserName(senderId)
 
   void mcp.notification({
     method: 'notifications/claude/channel',
