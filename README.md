@@ -12,10 +12,10 @@ Feishu (飞书) channel plugin for [Claude Code](https://claude.com/claude-code)
 
 ```bash
 # Add the marketplace (one-time)
-claude plugin marketplace add m1heng/claude-plugins
+claude plugin marketplace add haojunyu/claude-plugins
 
 # Install the plugin
-claude plugin install feishu@m1heng-plugins
+claude plugin install feishu@haojunyu-plugins
 ```
 
 ## Configure
@@ -39,17 +39,15 @@ claude plugin install feishu@m1heng-plugins
 
 In Claude Code, run:
 
-```
+````
 /feishu:configure <app_id> <app_secret>
 ```
 
 ### Start with channels
 
 ```bash
-claude --dangerously-load-development-channels plugin:feishu@m1heng-plugins
+freecode --channels plugin:feishu@m1heng-plugins
 ```
-
-> The `--dangerously-load-development-channels` flag is required during the [channels research preview](https://code.claude.com/docs/en/channels-reference#test-during-the-research-preview) for non-official plugins.
 
 ### Pair your Feishu account
 
